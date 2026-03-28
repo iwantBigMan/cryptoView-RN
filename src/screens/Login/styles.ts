@@ -205,4 +205,19 @@ export const styles = StyleSheet.create({
     color: TextSecondary,
     lineHeight: 18,
   },
+  errorBanner: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: ErrorColor,
+  },
+  errorText: {
+    fontSize: 13,
+    color: ErrorColor,
+    fontWeight: '600',
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
 });

@@ -1,41 +1,36 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   ExchangeType,
   ExchangeDisplayName,
 } from '../../domain/Coin';
-import {TextSecondary} from '../../theme/colors';
+import {TextSecondary, ErrorColor} from '../../theme/colors';
+import {useLogin} from '../../hooks/useLogin';
 import {styles} from './styles';
 
 interface Props {
   onLoginSuccess: () => void;
 }
 
-interface ExchangeInput {
-  apiKey: string;
-  secretKey: string;
-}
-
 export default function LoginScreen({onLoginSuccess}: Props) {
-  const [upbitInput, setUpbitInput] = useState<ExchangeInput>({
-    apiKey: '',
-    secretKey: '',
-  });
-  const [selectedExchanges, setSelectedExchanges] = useState<ExchangeType[]>(
-    [],
-  );
-  const [foreignInputs, setForeignInputs] = useState<
-    Record<string, ExchangeInput>
-  >({});
-  const [savedCredentials, setSavedCredentials] = useState<ExchangeType[]>([]);
+  const {
+    state,
+    updateApiKey,
+    updateSecretKey,
+    toggleExchange,
+    saveCredentials,
+    deleteCredentials,
+    clearError,
+  } = useLogin(onLoginSuccess);
+
   const [upbitSecretVisible, setUpbitSecretVisible] = useState(false);
   const [foreignSecretVisible, setForeignSecretVisible] = useState<
     Record<string, boolean>
@@ -46,26 +41,13 @@ export default function LoginScreen({onLoginSuccess}: Props) {
     e => e !== ExchangeType.UPBIT,
   );
 
-  const toggleExchange = (ex: ExchangeType) => {
-    setSelectedExchanges(prev =>
-      prev.includes(ex) ? prev.filter(e => e !== ex) : [...prev, ex],
-    );
-  };
-
-  const handleSave = () => {
-    if (!upbitInput.apiKey.trim() || !upbitInput.secretKey.trim()) {
-      Alert.alert('연동 실패', 'Upbit API Key와 Secret Key를 입력하세요.');
-      return;
+  // 에러 발생 시 3초 후 자동 클리어
+  useEffect(() => {
+    if (state.error) {
+      const timer = setTimeout(clearError, 3000);
+      return () => clearTimeout(timer);
     }
-    // 목 데이터: 저장 성공 시뮬레이션
-    const saved = [ExchangeType.UPBIT, ...selectedExchanges];
-    setSavedCredentials(saved);
-    onLoginSuccess();
-  };
-
-  const handleDeleteCredential = (ex: ExchangeType) => {
-    setSavedCredentials(prev => prev.filter(e => e !== ex));
-  };
+  }, [state.error, clearError]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -76,11 +58,18 @@ export default function LoginScreen({onLoginSuccess}: Props) {
         {/* 헤더 */}
         <Text style={styles.headerTitle}>거래소 연동</Text>
 
+        {/* 에러 배너 */}
+        {state.error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{state.error}</Text>
+          </View>
+        )}
+
         {/* 저장된 거래소 목록 */}
-        {savedCredentials.length > 0 && (
+        {state.savedCredentials.length > 0 && (
           <>
             <Text style={styles.sectionLabel}>연동된 거래소</Text>
-            {savedCredentials.map(ex => (
+            {state.savedCredentials.map(ex => (
               <View key={ex} style={styles.savedItem}>
                 <View>
                   <Text style={styles.savedExchangeName}>
@@ -89,7 +78,7 @@ export default function LoginScreen({onLoginSuccess}: Props) {
                   <Text style={styles.savedStatus}>연동됨</Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => handleDeleteCredential(ex)}
+                  onPress={() => deleteCredentials(ex)}
                   activeOpacity={0.7}>
                   <Text style={styles.deleteButton}>🗑</Text>
                 </TouchableOpacity>
@@ -116,12 +105,11 @@ export default function LoginScreen({onLoginSuccess}: Props) {
               style={styles.input}
               placeholder="API Key를 입력하세요"
               placeholderTextColor={TextSecondary}
-              value={upbitInput.apiKey}
-              onChangeText={text =>
-                setUpbitInput(prev => ({...prev, apiKey: text}))
-              }
+              value={state.inputs[ExchangeType.UPBIT]?.apiKey ?? ''}
+              onChangeText={text => updateApiKey(ExchangeType.UPBIT, text)}
               autoCorrect={false}
               autoCapitalize="none"
+              editable={!state.isLoading}
             />
           </View>
 
@@ -132,13 +120,12 @@ export default function LoginScreen({onLoginSuccess}: Props) {
                 style={[styles.input, styles.secretInput]}
                 placeholder="Secret Key를 입력하세요"
                 placeholderTextColor={TextSecondary}
-                value={upbitInput.secretKey}
-                onChangeText={text =>
-                  setUpbitInput(prev => ({...prev, secretKey: text}))
-                }
+                value={state.inputs[ExchangeType.UPBIT]?.secretKey ?? ''}
+                onChangeText={text => updateSecretKey(ExchangeType.UPBIT, text)}
                 secureTextEntry={!upbitSecretVisible}
                 autoCorrect={false}
                 autoCapitalize="none"
+                editable={!state.isLoading}
               />
               <TouchableOpacity
                 style={styles.visibilityToggle}
@@ -163,7 +150,7 @@ export default function LoginScreen({onLoginSuccess}: Props) {
             </TouchableOpacity>
             <Text style={styles.selectedExchangesText}>
               선택:{' '}
-              {selectedExchanges
+              {state.selectedExchanges
                 .map(e => ExchangeDisplayName[e])
                 .join(', ') || '없음'}
             </Text>
@@ -180,10 +167,10 @@ export default function LoginScreen({onLoginSuccess}: Props) {
                   <View
                     style={[
                       styles.checkbox,
-                      selectedExchanges.includes(ex) &&
+                      state.selectedExchanges.includes(ex) &&
                         styles.checkboxSelected,
                     ]}>
-                    {selectedExchanges.includes(ex) && (
+                    {state.selectedExchanges.includes(ex) && (
                       <Text style={styles.checkmark}>✓</Text>
                     )}
                   </View>
@@ -197,7 +184,7 @@ export default function LoginScreen({onLoginSuccess}: Props) {
         </View>
 
         {/* 선택된 해외 거래소 입력 필드 */}
-        {selectedExchanges.map(ex => (
+        {state.selectedExchanges.map(ex => (
           <View key={ex} style={styles.card}>
             <Text style={styles.cardTitle}>{ExchangeDisplayName[ex]}</Text>
 
@@ -207,15 +194,11 @@ export default function LoginScreen({onLoginSuccess}: Props) {
                 style={styles.input}
                 placeholder="API Key를 입력하세요"
                 placeholderTextColor={TextSecondary}
-                value={foreignInputs[ex]?.apiKey ?? ''}
-                onChangeText={text =>
-                  setForeignInputs(prev => ({
-                    ...prev,
-                    [ex]: {...(prev[ex] ?? {apiKey: '', secretKey: ''}), apiKey: text},
-                  }))
-                }
+                value={state.inputs[ex]?.apiKey ?? ''}
+                onChangeText={text => updateApiKey(ex, text)}
                 autoCorrect={false}
                 autoCapitalize="none"
+                editable={!state.isLoading}
               />
             </View>
 
@@ -226,19 +209,12 @@ export default function LoginScreen({onLoginSuccess}: Props) {
                   style={[styles.input, styles.secretInput]}
                   placeholder="Secret Key를 입력하세요"
                   placeholderTextColor={TextSecondary}
-                  value={foreignInputs[ex]?.secretKey ?? ''}
-                  onChangeText={text =>
-                    setForeignInputs(prev => ({
-                      ...prev,
-                      [ex]: {
-                        ...(prev[ex] ?? {apiKey: '', secretKey: ''}),
-                        secretKey: text,
-                      },
-                    }))
-                  }
+                  value={state.inputs[ex]?.secretKey ?? ''}
+                  onChangeText={text => updateSecretKey(ex, text)}
                   secureTextEntry={!foreignSecretVisible[ex]}
                   autoCorrect={false}
                   autoCapitalize="none"
+                  editable={!state.isLoading}
                 />
                 <TouchableOpacity
                   style={styles.visibilityToggle}
@@ -260,10 +236,15 @@ export default function LoginScreen({onLoginSuccess}: Props) {
 
         {/* 연동하기 버튼 */}
         <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.7}>
-          <Text style={styles.saveButtonText}>연동하기</Text>
+          style={[styles.saveButton, state.isLoading && styles.saveButtonDisabled]}
+          onPress={saveCredentials}
+          activeOpacity={0.7}
+          disabled={state.isLoading}>
+          {state.isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.saveButtonText}>연동하기</Text>
+          )}
         </TouchableOpacity>
 
         {/* 안내 카드 */}

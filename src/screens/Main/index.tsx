@@ -31,7 +31,11 @@ function TabIcon({name, color}: {name: string; color: string}) {
   return <Text style={{fontSize: 20, color}}>{icons[name] ?? '?'}</Text>;
 }
 
-export default function MainScreen() {
+interface Props {
+  onLogout?: () => void;
+}
+
+export default function MainScreen({onLogout}: Props) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -88,9 +92,9 @@ export default function MainScreen() {
         options={{
           tabBarLabel: 'Settings',
           tabBarIcon: ({color}) => <TabIcon name="settings" color={color} />,
-        }}
-        component={SettingsScreen}
-      />
+        }}>
+        {() => <SettingsScreen onLogout={onLogout} />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 }

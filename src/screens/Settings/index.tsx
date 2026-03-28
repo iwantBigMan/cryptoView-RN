@@ -1,31 +1,36 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {View, Text, TouchableOpacity, ScrollView, Alert} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {ExchangeType, ExchangeDisplayName} from '../../domain/Coin';
 import {UpbitBlue, GateIOPurple} from '../../theme/colors';
+import {credentialsManager} from '../../data/local/credentialsManager';
 import {styles} from './styles';
-
-// 연동된 거래소 목록 (목데이터)
-const linkedExchanges = [ExchangeType.UPBIT, ExchangeType.GATEIO];
 
 const exchangeColor: Record<ExchangeType, string> = {
   [ExchangeType.UPBIT]: UpbitBlue,
   [ExchangeType.GATEIO]: GateIOPurple,
 };
 
-export default function SettingsScreen() {
-  const [, setLoggedOut] = useState(false);
+interface Props {
+  onLogout?: () => void;
+}
+
+export default function SettingsScreen({onLogout}: Props) {
+  const linkedExchanges = credentialsManager.getSavedExchanges();
 
   const handleLogout = () => {
     Alert.alert(
       '로그아웃',
-      '모든 연동된 거래소 정보가 삭제되고 앱이 종료됩니다.',
+      '모든 연동된 거래소 정보가 삭제됩니다.',
       [
         {text: '취소', style: 'cancel'},
         {
           text: '로그아웃',
           style: 'destructive',
-          onPress: () => setLoggedOut(true),
+          onPress: () => {
+            credentialsManager.clearAll();
+            onLogout?.();
+          },
         },
       ],
     );

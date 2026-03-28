@@ -6,6 +6,7 @@ import LoginScreen from './src/screens/Login';
 import MainScreen from './src/screens/Main';
 import HoldingDetailScreen from './src/screens/HoldingDetail';
 import {BackgroundPrimary} from './src/theme/colors';
+import {credentialsManager} from './src/data/local/credentialsManager';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -16,7 +17,10 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // MMKV에서 저장된 인증 정보 확인 (동기)
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => credentialsManager.hasRequiredCredentials(),
+  );
 
   return (
     <SafeAreaProvider>
@@ -34,7 +38,9 @@ export default function App() {
             </Stack.Screen>
           ) : (
             <>
-              <Stack.Screen name="Main" component={MainScreen} />
+              <Stack.Screen name="Main">
+                {() => <MainScreen onLogout={() => setIsLoggedIn(false)} />}
+              </Stack.Screen>
               <Stack.Screen
                 name="HoldingDetail"
                 component={HoldingDetailScreen}
