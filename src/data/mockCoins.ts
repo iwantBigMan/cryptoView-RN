@@ -1,11 +1,9 @@
 import {
   ExchangeType,
-  HoldingData,
-  AggregatedHolding,
-  ExchangeData,
-  ExchangeHoldingDetail,
   CurrencyUnit,
-} from '../domain/Coin';
+} from '../domain/model/Exchange';
+import type {HoldingData, AggregatedHolding, ExchangeData} from '../domain/model/Holding';
+import type {ExchangeHoldingDetail} from '../domain/model/HoldingDetail';
 
 // 보유 코인 목 데이터
 export const mockHoldings: HoldingData[] = [

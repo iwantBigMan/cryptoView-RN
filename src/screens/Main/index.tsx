@@ -65,11 +65,9 @@ export default function MainScreen({onLogout}: Props) {
           tabBarLabel: 'Home',
           tabBarIcon: ({color}) => <TabIcon name="home" color={color} />,
         }}>
-        {() => (
+        {({navigation: tabNavigation}) => (
           <AssetsOverviewScreen
-            onNavigateToHoldings={() =>
-              navigation.getParent()?.navigate('Main', {screen: 'Holdings'})
-            }
+            onNavigateToHoldings={() => tabNavigation.navigate('Holdings')}
           />
         )}
       </Tab.Screen>

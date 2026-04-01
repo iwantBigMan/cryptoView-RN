@@ -6,7 +6,8 @@ import LoginScreen from './src/screens/Login';
 import MainScreen from './src/screens/Main';
 import HoldingDetailScreen from './src/screens/HoldingDetail';
 import {BackgroundPrimary} from './src/theme/colors';
-import {credentialsManager} from './src/data/local/credentialsManager';
+import {exchangeRepository} from './src/data/repository/exchangeRepository';
+import {PortfolioProvider} from './src/context/PortfolioContext';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -19,25 +20,21 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   // MMKV에서 저장된 인증 정보 확인 (동기)
   const [isLoggedIn, setIsLoggedIn] = useState(
-    () => credentialsManager.hasRequiredCredentials(),
+    () => exchangeRepository.hasRequiredCredentials(),
   );
 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName={isLoggedIn ? 'Main' : 'Login'}
-          screenOptions={{
-            headerShown: false,
-            navigationBarColor: BackgroundPrimary,
-            statusBarStyle: 'light',
-          }}>
-          {!isLoggedIn ? (
-            <Stack.Screen name="Login">
-              {() => <LoginScreen onLoginSuccess={() => setIsLoggedIn(true)} />}
-            </Stack.Screen>
-          ) : (
-            <>
+        {isLoggedIn ? (
+          <PortfolioProvider>
+            <Stack.Navigator
+              initialRouteName="Main"
+              screenOptions={{
+                headerShown: false,
+                navigationBarColor: BackgroundPrimary,
+                statusBarStyle: 'light',
+              }}>
               <Stack.Screen name="Main">
                 {() => <MainScreen onLogout={() => setIsLoggedIn(false)} />}
               </Stack.Screen>
@@ -45,9 +42,21 @@ export default function App() {
                 name="HoldingDetail"
                 component={HoldingDetailScreen}
               />
-            </>
-          )}
-        </Stack.Navigator>
+            </Stack.Navigator>
+          </PortfolioProvider>
+        ) : (
+          <Stack.Navigator
+            initialRouteName="Login"
+            screenOptions={{
+              headerShown: false,
+              navigationBarColor: BackgroundPrimary,
+              statusBarStyle: 'light',
+            }}>
+            <Stack.Screen name="Login">
+              {() => <LoginScreen onLoginSuccess={() => setIsLoggedIn(true)} />}
+            </Stack.Screen>
+          </Stack.Navigator>
+        )}
       </NavigationContainer>
     </SafeAreaProvider>
   );

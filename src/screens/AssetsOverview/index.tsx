@@ -1,21 +1,15 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
+import {View, Text, TouchableOpacity, ScrollView, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import DonutChart from '../../components/DonutChart';
 import {
   ExchangeType,
   ExchangeDisplayName,
   ExchangeColor,
-  AggregatedHolding,
-} from '../../domain/Coin';
-import {
-  mockAggregatedHoldings,
-  mockExchangeBreakdown,
-  mockTotalValue,
-  mockTotalChange,
-  mockTotalChangeRate,
-} from '../../data/mockCoins';
-import {PositiveGreen, NegativeRed} from '../../theme/colors';
+} from '../../domain/model/Exchange';
+import type {AggregatedHolding, ExchangeData} from '../../domain/model/Holding';
+import {usePortfolioContext} from '../../context/PortfolioContext';
+import {PositiveGreen, NegativeRed, AccentBlue} from '../../theme/colors';
 import {styles} from './styles';
 
 interface Props {
@@ -28,7 +22,21 @@ function formatKRW(value: number): string {
 }
 
 export default function AssetsOverviewScreen({onNavigateToHoldings}: Props) {
-  const topHoldings = mockAggregatedHoldings.slice(0, 5);
+  const {state, refresh} = usePortfolioContext();
+  const topHoldings = state.aggregated.slice(0, 5);
+
+  if (state.isLoading && state.aggregated.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <ActivityIndicator size="large" color={AccentBlue} />
+          <Text style={{color: 'rgba(255,255,255,0.6)', marginTop: 12}}>
+            자산 데이터 로딩 중...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -36,15 +44,21 @@ export default function AssetsOverviewScreen({onNavigateToHoldings}: Props) {
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
+        {state.error && (
+          <View style={{backgroundColor: '#3B1111', borderRadius: 8, padding: 12, marginBottom: 4}}>
+            <Text style={{color: '#F87171', fontSize: 13}}>{state.error}</Text>
+          </View>
+        )}
+
         {/* Total Balance Card */}
         <TotalBalanceCard
-          totalValue={mockTotalValue}
-          totalChange={mockTotalChange}
-          totalChangeRate={mockTotalChangeRate}
+          totalValue={state.totalValue}
+          totalChange={state.totalChange}
+          totalChangeRate={state.totalChangeRate}
         />
 
         {/* Exchange Breakdown Card */}
-        <ExchangeBreakdownCard />
+        <ExchangeBreakdownCard exchangeBreakdown={state.exchangeBreakdown} />
 
         {/* Top 5 Holdings Card */}
         <TopHoldingsCard
@@ -83,8 +97,8 @@ function TotalBalanceCard({
 }
 
 // ── ExchangeBreakdownCard ──
-function ExchangeBreakdownCard() {
-  const visibleExchanges = mockExchangeBreakdown.filter(e => e.totalValue > 0);
+function ExchangeBreakdownCard({exchangeBreakdown}: {exchangeBreakdown: ExchangeData[]}) {
+  const visibleExchanges = exchangeBreakdown.filter(e => e.totalValue > 0);
 
   const segments = visibleExchanges.map(ex => ({
     color: ExchangeColor[ex.exchange],

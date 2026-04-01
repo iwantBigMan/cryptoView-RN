@@ -6,15 +6,13 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {
-  AggregatedHolding,
-  ExchangeType,
-  ExchangeColor,
-} from '../../domain/Coin';
-import {mockAggregatedHoldings} from '../../data/mockCoins';
-import {PositiveGreen, NegativeRed} from '../../theme/colors';
+import {ExchangeType, ExchangeColor} from '../../domain/model/Exchange';
+import type {AggregatedHolding} from '../../domain/model/Holding';
+import {usePortfolioContext} from '../../context/PortfolioContext';
+import {PositiveGreen, NegativeRed, AccentBlue} from '../../theme/colors';
 import {styles} from './styles';
 
 type SortType = 'VALUE' | 'PROFIT' | 'SYMBOL';
@@ -24,11 +22,12 @@ interface Props {
 }
 
 export default function HoldingsScreen({onHoldingClick}: Props) {
+  const {state, refresh} = usePortfolioContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortType, setSortType] = useState<SortType>('VALUE');
 
   const filteredHoldings = useMemo(() => {
-    let result = [...mockAggregatedHoldings];
+    let result = [...state.aggregated];
 
     // 검색 필터
     if (searchQuery.trim()) {
@@ -56,7 +55,7 @@ export default function HoldingsScreen({onHoldingClick}: Props) {
     }
 
     return result;
-  }, [searchQuery, sortType]);
+  }, [searchQuery, sortType, state.aggregated]);
 
   const renderItem = ({item}: {item: AggregatedHolding}) => (
     <AggregatedHoldingCard
@@ -70,7 +69,9 @@ export default function HoldingsScreen({onHoldingClick}: Props) {
       {/* 헤더 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Holdings</Text>
-        <Text style={styles.refreshIcon}>↻</Text>
+        <TouchableOpacity onPress={refresh} activeOpacity={0.7}>
+          <Text style={styles.refreshIcon}>{state.isLoading ? '...' : '↻'}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 검색바 */}

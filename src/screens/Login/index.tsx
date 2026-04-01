@@ -11,7 +11,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {
   ExchangeType,
   ExchangeDisplayName,
-} from '../../domain/Coin';
+} from '../../domain/model/Exchange';
 import {TextSecondary, ErrorColor} from '../../theme/colors';
 import {useLogin} from '../../hooks/useLogin';
 import {styles} from './styles';

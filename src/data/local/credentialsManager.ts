@@ -1,4 +1,4 @@
-import {ExchangeType} from '../../domain/Coin';
+import {ExchangeType} from '../../domain/model/Exchange';
 import {credentialsStorage} from './mmkvStorage';
 
 const KEYS = {

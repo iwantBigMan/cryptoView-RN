@@ -1,15 +1,12 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, FlatList} from 'react-native';
+import {View, Text, TouchableOpacity, FlatList, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../../App';
-import {
-  ExchangeHoldingDetail,
-  CurrencyUnit,
-  ExchangeDisplayName,
-} from '../../domain/Coin';
-import {mockExchangeHoldingDetails} from '../../data/mockCoins';
-import {PositiveColor, NegativeColor} from '../../theme/colors';
+import {CurrencyUnit, ExchangeDisplayName} from '../../domain/model/Exchange';
+import type {ExchangeHoldingDetail} from '../../domain/model/HoldingDetail';
+import {usePortfolioContext} from '../../context/PortfolioContext';
+import {PositiveColor, NegativeColor, AccentBlue} from '../../theme/colors';
 import {styles} from './styles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HoldingDetail'>;
@@ -36,11 +33,10 @@ function formatQuantity(qty: number): string {
 
 export default function HoldingDetailScreen({route, navigation}: Props) {
   const {symbol} = route.params;
+  const {state} = usePortfolioContext();
 
-  // 심볼에 맞는 상세 데이터 (목 데이터)
-  const holdings = mockExchangeHoldingDetails.filter(
-    h => h.symbol === symbol,
-  );
+  // 심볼에 맞는 상세 데이터
+  const holdings = state.detailMap[symbol] ?? [];
 
   const renderItem = ({item}: {item: ExchangeHoldingDetail}) => (
     <ExchangeHoldingCard holding={item} />

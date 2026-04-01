@@ -6,6 +6,7 @@ import {
   TextTertiary,
   ErrorColor,
   DividerColor,
+  AccentBlue,
 } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
@@ -68,6 +69,43 @@ export const styles = StyleSheet.create({
   linkedBadge: {
     fontSize: 13,
     color: TextSecondary,
+  },
+  addExchangeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CardBackground,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+  },
+  addIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: AccentBlue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  addIconText: {
+    fontSize: 25,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    lineHeight: 22,
+  },
+  addTextCol: {
+    flex: 1,
+  },
+  addTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  addSub: {
+    fontSize: 12,
+    color: TextTertiary,
+    marginTop: 2,
   },
   logoutCard: {
     flexDirection: 'row',

@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, ScrollView, Alert} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {ExchangeType, ExchangeDisplayName} from '../../domain/Coin';
+import {ExchangeType, ExchangeDisplayName} from '../../domain/model/Exchange';
 import {UpbitBlue, GateIOPurple} from '../../theme/colors';
 import {credentialsManager} from '../../data/local/credentialsManager';
 import {styles} from './styles';
@@ -69,6 +69,20 @@ export default function SettingsScreen({onLogout}: Props) {
             </View>
           ))}
         </View>
+
+        {/* 거래소 추가 */}
+        <TouchableOpacity 
+          style={styles.addExchangeCard} 
+          activeOpacity={0.7}>
+          <View style={styles.addIconCircle}>
+            <Text style={styles.addIconText}>+</Text>
+          </View>
+          <View style={styles.addTextCol}>
+            <Text style={styles.addTitle}>거래소 추가/삭제</Text>
+            <Text style={styles.addSub}>새로운 거래소 계정을 연동합니다</Text>
+          </View>
+        </TouchableOpacity>
+    
 
         {/* 로그아웃 */}
         <TouchableOpacity
